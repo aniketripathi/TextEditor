@@ -3,13 +3,9 @@ package application;
 
 import frontend.SceneCreator;
 import javafx.application.Application;
+import javafx.scene.Scene;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
-import javafx.scene.Group;
-import javafx.scene.Scene;
-import javafx.scene.control.Menu;
-import javafx.scene.control.MenuBar;
-import javafx.scene.layout.BorderPane;
 
 
 public class TextEditor extends Application {
@@ -25,16 +21,17 @@ public class TextEditor extends Application {
 	primaryStage.setResizable(true);
 	primaryStage.initStyle(StageStyle.DECORATED);
 	
-	Scene primaryScene = SceneCreator.getScene();
-	SceneCreator.bindSize(primaryStage);
+	
+	primaryStage.setMinHeight(100);
+	primaryStage.setMinWidth(200);
+	SceneCreator sceneCreator = new SceneCreator(primaryStage);
+	
+	Scene primaryScene = sceneCreator.getScene();
+
 	primaryStage.setScene(primaryScene);
-	
-	primaryStage.widthProperty().addListener( (obs, oldval, newval) -> SceneCreator.print(primaryStage) );
-	
+	primaryStage.setMaximized(true);
 	primaryStage.show();
 	
-	
-	SceneCreator.print(primaryStage);
 	}
 	
 	public static void main(String[] args) {
