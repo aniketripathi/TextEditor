@@ -1,11 +1,17 @@
 package frontend;
 
-import javafx.geometry.Orientation;
+
+import javafx.application.Platform;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
-import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.Region;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
@@ -16,56 +22,60 @@ public class SceneCreator {
 	
 	
 	
-	private static FlowPane rootNode = new FlowPane(Orientation.VERTICAL);
-	private static MenuBar menuBar	 =  new MenuBar();
-	private static FileChooser fileChoser = new FileChooser();
+	private BorderPane rootNode;
+	private MenuBar menuBar; 
+	private FileChooser fileChoser;
 	
+	private Scene primaryScene;
+	private Stage stage;
 	
+	private Alert aboutDialog;
+	private Alert findAndReplaceDialog;
 	
-	
-	
-	
-	private static Scene primaryScene = new Scene(rootNode);
-	
-	static {
-		init();
+	public SceneCreator(Stage stage){
+		init(stage);
 		addMenus();
-		System.out.print(menuBar.isResizable());
 	}
 	
 	
-	public static void bindSize(Stage stage){
-		
-		rootNode.prefHeightProperty().bind(stage.heightProperty());
-		rootNode.prefWidthProperty().bind(stage.widthProperty());
-		
-		menuBar.prefHeightProperty().bind(rootNode.heightProperty());
-		menuBar.prefWidthProperty().bind(rootNode.widthProperty());
-	}
-	
-	
-	public static void print(Stage stage){
-		System.out.print("\n"+stage.getWidth() + "," + stage.getHeight() );
-		System.out.print(rootNode.getWidth() + "," + rootNode.getHeight() );
-		System.out.print(menuBar.getWidth() + "," + menuBar.getHeight() );
-	}
-	
-	public static Scene getScene(){
+	public  Scene getScene(){
 		
 		return primaryScene;
 	}
 	
 	
 	
-	private static void init(){
+	private  void init(Stage stage){
 	
+		this.stage = stage;
+		rootNode = new BorderPane();
+		menuBar	 =  new MenuBar();
+		fileChoser = new FileChooser();
+		primaryScene = new Scene(rootNode);
 		
-		rootNode.getChildren().add(menuBar);
+		aboutDialog = new Alert(AlertType.NONE);
+		aboutDialog.getDialogPane().setContent(new Label("Text Editor Basic \n version 1.0"));
+		aboutDialog.getButtonTypes().add(ButtonType.OK);
+		aboutDialog.setTitle("About");
+		aboutDialog.getDialogPane().setMinSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
+		aboutDialog.setResizable(false);
+		
+		
+		findAndReplaceDialog = new Alert(AlertType.NONE);
+		
+		
+		rootNode.setTop(menuBar);
 		
 	}
 	
 	
-	private static void addMenus(){
+	private void showAboutDialog(){
+		aboutDialog.showAndWait();
+				
+	}
+	
+	
+	private  void addMenus(){
 		
 		
 	/**  File Menu	**/
@@ -83,8 +93,21 @@ public class SceneCreator {
 		exitMenuItem = new MenuItem("Exit");
 		
    //set properties	
-		openMenuItem.setOnAction(eventHandler -> fileChoser.showOpenDialog(new Stage()));
+		openMenuItem.setOnAction(eventHandler -> { 
+			fileChoser.setTitle("Open File");
+			fileChoser.showOpenDialog(stage);
+					});
+		
+		saveAsMenuItem.setOnAction(eventHandler -> {
+			fileChoser.setTitle("Save As");
+			fileChoser.showSaveDialog(stage);});
+		
 	
+		exitMenuItem.setOnAction(eventHandler -> {
+			Platform.exit();
+			System.exit(0);
+			});
+		
 	//add to file menu	
 		fileMenu.getItems().add(newMenuItem);
 		fileMenu.getItems().add(openMenuItem);
@@ -124,6 +147,8 @@ public class SceneCreator {
 		Menu aboutMenu = new Menu("About");
 		aboutMenu.setId("aboutMenu");
 	
+		aboutMenu.setOnAction(eventHandler -> showAboutDialog());
+		
 	//	menu items
 		MenuItem aboutTextEditor;
 		
@@ -136,7 +161,7 @@ public class SceneCreator {
 		aboutMenu.getItems().add(aboutTextEditor);
 	
 		
-	/***	Add to menubar **/
+	/***	Add to menu bar **/
 		menuBar.getMenus().add(fileMenu);
 		menuBar.getMenus().add(editMenu);
 		menuBar.getMenus().add(aboutMenu);
