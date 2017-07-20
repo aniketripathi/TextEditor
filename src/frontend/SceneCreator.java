@@ -5,13 +5,21 @@ import javafx.application.Platform;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.RadioButton;
+import javafx.scene.control.TextField;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
@@ -29,8 +37,8 @@ public class SceneCreator {
 	private Scene primaryScene;
 	private Stage stage;
 	
-	private Alert aboutDialog;
-	private Alert findAndReplaceDialog;
+	
+	
 	
 	public SceneCreator(Stage stage){
 		init(stage);
@@ -44,7 +52,6 @@ public class SceneCreator {
 	}
 	
 	
-	
 	private  void init(Stage stage){
 	
 		this.stage = stage;
@@ -53,15 +60,6 @@ public class SceneCreator {
 		fileChoser = new FileChooser();
 		primaryScene = new Scene(rootNode);
 		
-		aboutDialog = new Alert(AlertType.NONE);
-		aboutDialog.getDialogPane().setContent(new Label("Text Editor Basic \n version 1.0"));
-		aboutDialog.getButtonTypes().add(ButtonType.OK);
-		aboutDialog.setTitle("About");
-		aboutDialog.getDialogPane().setMinSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
-		aboutDialog.setResizable(false);
-		
-		
-		findAndReplaceDialog = new Alert(AlertType.NONE);
 		
 		
 		rootNode.setTop(menuBar);
@@ -69,7 +67,143 @@ public class SceneCreator {
 	}
 	
 	
-	private void showAboutDialog(){
+	private void displayFindDialog(){
+		
+		/** Create the dialog box **/
+		
+		Dialog<Void> findDialog = new Dialog<Void>();
+		
+		HBox topContainer = new HBox();
+		VBox dataContainer = new VBox(),
+			 buttonContainer = new VBox();
+		
+		
+		HBox findBox = new HBox();
+		Label find = new Label("Find");
+		TextField findWhat = new TextField();
+		findBox.getChildren().addAll(find, findWhat);
+		
+		
+		HBox directionBox = new HBox();
+		Label directionLabel = new Label("Direction:");
+		ToggleGroup directionToggleGroup = new ToggleGroup();
+		RadioButton upRadioButton= new RadioButton("Up"); 
+					upRadioButton.setToggleGroup(directionToggleGroup); 
+		RadioButton downRadioButton= new RadioButton("Down"); 
+					downRadioButton.setToggleGroup(directionToggleGroup);
+		directionBox.getChildren().addAll(directionLabel, upRadioButton, downRadioButton);
+		
+		
+		
+		CheckBox caseCheckBox = new CheckBox("Match Case");
+		dataContainer.getChildren().addAll(findBox, directionBox, caseCheckBox);
+		
+		
+		
+		Button findNext = new Button("Find Next");
+		buttonContainer.getChildren().add(findNext);
+		
+		topContainer.getChildren().addAll(dataContainer, buttonContainer);
+		findDialog.getDialogPane().setContent(topContainer);
+		
+		findDialog.getDialogPane().getButtonTypes().add(ButtonType.CANCEL);
+		
+		/** Setting style **/
+		findDialog.setTitle("Find");
+		
+		
+		findBox.setSpacing(5);
+		directionBox.setSpacing(10);
+		dataContainer.setSpacing(10);
+		topContainer.setSpacing(20);
+		
+		findDialog.setResizable(false);
+		
+		
+		// show the dialog
+		findDialog.showAndWait();
+	
+	}
+	
+	
+	
+	private void displayReplaceDialog(){
+
+		/** Create the dialog box **/
+		
+		Dialog<Void> replaceDialog = new Dialog<Void>();
+		
+		HBox topContainer = new HBox();
+		VBox dataContainer = new VBox(),
+			 buttonContainer = new VBox();
+		
+		
+		HBox findBox = new HBox();
+		Label find = new Label("Find");
+		TextField findWhat = new TextField();
+		findBox.getChildren().addAll(find, findWhat);
+		
+		
+		HBox replaceBox = new HBox();
+		Label replaceLabel = new Label("Replace");
+		TextField replaceWith = new TextField();
+		replaceBox.getChildren().addAll(replaceLabel, replaceWith);
+		
+		CheckBox caseCheckBox = new CheckBox("Match Case");
+		dataContainer.getChildren().addAll(findBox, caseCheckBox);
+		
+		
+		
+		Button findNext = new Button("Find Next");
+		Button replace = new Button("Replace");
+		Button replaceAll = new Button("ReplaceAll");
+		
+		
+		buttonContainer.getChildren().addAll(findNext, replace, replaceAll);
+		
+		topContainer.getChildren().addAll(dataContainer, buttonContainer);
+		replaceDialog.getDialogPane().setContent(topContainer);
+		
+		replaceDialog.getDialogPane().getButtonTypes().add(ButtonType.CANCEL);
+		
+		/** Setting style **/
+		replaceDialog.setTitle("Find and Replace");
+		
+		
+		findBox.setSpacing(5);
+		replaceBox.setSpacing(5);
+		dataContainer.setSpacing(10);
+		buttonContainer.setSpacing(10);
+		topContainer.setSpacing(20);
+		
+		findNext.setMaxWidth(Double.MAX_VALUE);
+		replace.setMaxWidth(Double.MAX_VALUE);
+		replaceAll.setMaxWidth(Double.MAX_VALUE);
+		
+
+		replaceDialog.setResizable(false);
+		
+		
+		// show the dialog
+		replaceDialog.showAndWait();
+	
+	}
+	
+	
+	private void displayAboutDialog(){
+		 Alert aboutDialog = new Alert(AlertType.NONE);
+		
+		VBox labelContainer = new VBox();
+		labelContainer.getChildren().addAll(new Label("Text Editor Basic \n version 1.0"), new Label("By Aniket Kumar Tripathi"));
+		labelContainer.setSpacing(5);
+		
+		aboutDialog.getDialogPane().setContent(labelContainer);
+		aboutDialog.getButtonTypes().add(ButtonType.OK);
+		aboutDialog.setTitle("About");
+		aboutDialog.getDialogPane().setMinSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
+		aboutDialog.setResizable(false);
+		
+		
 		aboutDialog.showAndWait();
 				
 	}
@@ -132,7 +266,8 @@ public class SceneCreator {
 				replaceMenuItem = new MenuItem("Replace");
 				
 	 //set properties		
-
+				findMenuItem.setOnAction(eventHandler -> displayFindDialog());
+				replaceMenuItem.setOnAction(eventHandler -> displayReplaceDialog());
 	// add to editMenu
 				editMenu.getItems().add(cutMenuItem);
 				editMenu.getItems().add(copyMenuItem);
@@ -147,7 +282,7 @@ public class SceneCreator {
 		Menu aboutMenu = new Menu("About");
 		aboutMenu.setId("aboutMenu");
 	
-		aboutMenu.setOnAction(eventHandler -> showAboutDialog());
+		aboutMenu.setOnAction(eventHandler -> displayAboutDialog());
 		
 	//	menu items
 		MenuItem aboutTextEditor;
