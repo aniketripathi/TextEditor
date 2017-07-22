@@ -21,6 +21,9 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleGroup;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyCombination;
 import javafx.scene.layout.Border;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.BorderStroke;
@@ -224,19 +227,20 @@ public class SceneCreator {
 		HBox fontBox = new HBox();
 		
 		Label fontLabel = new Label("Font");
-		ListView<String> fontView = new ListView<String>(FXCollections.observableList(Font.getFontNames()));
+		ListView<String> fontView = new ListView<String>(FXCollections.observableList(Font.getFamilies()));
 		fontBox.getChildren().addAll(fontLabel, fontView);
 		gridPane.add(fontBox, 0, 0);
 		
 		HBox sizeBox = new HBox();
 		Label sizeLabel = new Label("Size");
-		ListView<String> sizeView = new ListView<String>(FXCollections.observableArrayList());
+		ListView<Integer> sizeView = new ListView<Integer>(FontManager.getAllSizes());
 		sizeBox.getChildren().addAll(sizeLabel, sizeView);
 		gridPane.add(sizeBox, 1, 0);
 		
 		HBox styleBox = new HBox();
 		Label styleLabel = new Label("Style");
 		ArrayList<String> styleList = new ArrayList<String>();
+		styleList.add("Normal");
 		styleList.add("Bold");
 		styleList.add("Italic");
 		styleList.add("Bold and Italic");
@@ -274,10 +278,15 @@ public class SceneCreator {
 		sampleLabel.setPadding(new Insets(10));
 		sampleLabel.setBorder(border);
 		sampleLabel.setFont(new Font("Calibri", 50));
+		sampleLabel.setMaxSize(150	,150);
 		sampleBox.getChildren().add(sampleLabel);
 		
-		// show the dialog
 		
+		fontView.getSelectionModel().selectedItemProperty().addListener(changeListener -> FontManager.setLabelFont(fontView.getSelectionModel().getSelectedItem(), styleComboBox.getSelectionModel().getSelectedItem(), sizeView.getSelectionModel().getSelectedItem(), sampleLabel));
+		sizeView.getSelectionModel().selectedItemProperty().addListener(changeListener -> FontManager.setLabelFont(fontView.getSelectionModel().getSelectedItem(), styleComboBox.getSelectionModel().getSelectedItem(), sizeView.getSelectionModel().getSelectedItem(), sampleLabel));
+		styleComboBox.getSelectionModel().selectedItemProperty().addListener(changeListener -> FontManager.setLabelFont(fontView.getSelectionModel().getSelectedItem(), styleComboBox.getSelectionModel().getSelectedItem(), sizeView.getSelectionModel().getSelectedItem(), sampleLabel));
+		
+		// show the dialog
 		fontDialog.show();
 		
 	}
@@ -301,6 +310,8 @@ public class SceneCreator {
 		exitMenuItem = new MenuItem("Exit");
 		
 		// set properties
+		
+		
 		openMenuItem.setOnAction(eventHandler -> displayFileOpener());
 		
 		saveAsMenuItem.setOnAction(eventHandler -> displayFileSaver());
@@ -309,6 +320,12 @@ public class SceneCreator {
 			Platform.exit();
 			System.exit(0);
 		});
+		
+		//set shortcuts
+		newMenuItem.setAccelerator(new KeyCodeCombination(KeyCode.N, KeyCombination.CONTROL_DOWN));
+		openMenuItem.setAccelerator(new KeyCodeCombination(KeyCode.O, KeyCombination.CONTROL_DOWN));
+		saveMenuItem.setAccelerator(new KeyCodeCombination(KeyCode.S, KeyCombination.CONTROL_DOWN));
+		exitMenuItem.setAccelerator(new KeyCodeCombination(KeyCode.W, KeyCombination.CONTROL_DOWN));
 		
 		// add to file menu
 		fileMenu.getItems().addAll(newMenuItem, openMenuItem, saveMenuItem, saveAsMenuItem, exitMenuItem);
@@ -331,8 +348,18 @@ public class SceneCreator {
 		// set properties
 		findMenuItem.setOnAction(eventHandler -> displayFindDialog());
 		replaceMenuItem.setOnAction(eventHandler -> displayReplaceDialog());
+		
+		//set shortcuts
+		cutMenuItem.setAccelerator(new KeyCodeCombination(KeyCode.X, KeyCombination.CONTROL_DOWN));
+		copyMenuItem.setAccelerator(new KeyCodeCombination(KeyCode.C, KeyCombination.CONTROL_DOWN));
+		pasteMenuItem.setAccelerator(new KeyCodeCombination(KeyCode.V, KeyCombination.CONTROL_DOWN));
+		findMenuItem.setAccelerator(new KeyCodeCombination(KeyCode.F, KeyCombination.CONTROL_DOWN));
+		replaceMenuItem.setAccelerator(new KeyCodeCombination(KeyCode.H, KeyCombination.CONTROL_DOWN));
 		// add to editMenu
 		editMenu.getItems().addAll(cutMenuItem, copyMenuItem, pasteMenuItem, deleteMenuItem, findMenuItem, replaceMenuItem);
+		
+	
+		
 		
 		/** format menu **/
 		Menu formatMenu = new Menu("Format");
