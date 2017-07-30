@@ -1,6 +1,7 @@
 package frontend;
 
 import java.util.ArrayList;
+
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
@@ -37,6 +38,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import text_handler.FontManager;
 
 
 
@@ -48,22 +50,26 @@ public class SceneCreator {
 	
 	private Scene	primaryScene;
 	private Stage	stage;
+	private Editor	editor;
 	
 	
 	
 	public SceneCreator(Stage stage) {
-		init(stage);
-		addMenus();
+		init(stage);		// initialize
+		addMenus();			// add menus
 	}
 	
 	
 	
+	/** Returns the scene created by the scene creator **/
 	public Scene getScene() {
 		
 		return primaryScene;
 	}
 	
 	
+	
+	/** Initialize the Scene Creator **/
 	
 	private void init(Stage stage) {
 		
@@ -72,25 +78,39 @@ public class SceneCreator {
 		menuBar = new MenuBar();
 		fileChoser = new FileChooser();
 		primaryScene = new Scene(rootNode);
+		editor = new Editor();
+		
+		// editor.setFont(FontManager.FONT_DEFAULT, FontWeight.NORMAL);
 		
 		rootNode.setTop(menuBar);
+		rootNode.setCenter(editor);
 		
 	}
 	
-	private void displayFileOpener(){
+	
+	
+	private void displayFileOpener() {
+		
 		fileChoser.setTitle("Open");
 		fileChoser.showOpenDialog(stage);
 	}
 	
 	
-	private void displayFileSaver(){
+	
+	private void displayFileSaver() {
+		
 		fileChoser.setTitle("Save");
 		fileChoser.showSaveDialog(stage);
 	}
 	
+	
+	
+	/** Creates and displays a new find dialog **/
 	private void displayFindDialog() {
 		
 		/** Create the dialog box **/
+		
+		// Create children
 		
 		Dialog<Void> findDialog = new Dialog<Void>();
 		
@@ -140,10 +160,12 @@ public class SceneCreator {
 	
 	
 	
+	/** Create and display find and replace dialog **/
 	private void displayReplaceDialog() {
 		
 		/** Create the dialog box **/
 		
+		// Create children
 		Dialog<Void> replaceDialog = new Dialog<Void>();
 		
 		HBox topContainer = new HBox();
@@ -196,6 +218,7 @@ public class SceneCreator {
 	
 	
 	
+	/** Display about dialog. The about dialog displays the information about the text editor **/
 	private void displayAboutDialog() {
 		
 		Alert aboutDialog = new Alert(AlertType.NONE);
@@ -216,11 +239,15 @@ public class SceneCreator {
 	
 	
 	
+	/** Creates and displays a new font dialog **/
 	private void displayFontDialog() {
 		
-		Dialog<Void> fontDialog = new Dialog<Void>();
+		// create dialog
+		Dialog<ButtonType> fontDialog = new Dialog<ButtonType>();
 		
 		fontDialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+		
+		// Create children
 		
 		GridPane gridPane = new GridPane();
 		
@@ -257,7 +284,7 @@ public class SceneCreator {
 		
 		fontDialog.getDialogPane().setContent(gridPane);
 		
-		// set settings
+		// set structural settings
 		gridPane.setHgap(10);
 		gridPane.setVgap(20);
 		
@@ -265,6 +292,8 @@ public class SceneCreator {
 		fontView.setEditable(false);
 		fontView.setMaxHeight(200);
 		fontView.setMaxWidth(150);
+		fontView.setMinHeight(200);
+		fontView.setMinWidth(150);
 		
 		sizeBox.setSpacing(10);
 		sizeView.setEditable(false);
@@ -277,17 +306,43 @@ public class SceneCreator {
 		sampleBox.setAlignment(Pos.CENTER);
 		sampleLabel.setPadding(new Insets(10));
 		sampleLabel.setBorder(border);
-		sampleLabel.setFont(new Font("Calibri", 50));
-		sampleLabel.setMaxSize(150	,150);
+		sampleLabel.setMaxSize(150, 150);
+		sampleLabel.setMinSize(50, 50);
 		sampleBox.getChildren().add(sampleLabel);
 		
+		// set default font
 		
-		fontView.getSelectionModel().selectedItemProperty().addListener(changeListener -> FontManager.setLabelFont(fontView.getSelectionModel().getSelectedItem(), styleComboBox.getSelectionModel().getSelectedItem(), sizeView.getSelectionModel().getSelectedItem(), sampleLabel));
-		sizeView.getSelectionModel().selectedItemProperty().addListener(changeListener -> FontManager.setLabelFont(fontView.getSelectionModel().getSelectedItem(), styleComboBox.getSelectionModel().getSelectedItem(), sizeView.getSelectionModel().getSelectedItem(), sampleLabel));
-		styleComboBox.getSelectionModel().selectedItemProperty().addListener(changeListener -> FontManager.setLabelFont(fontView.getSelectionModel().getSelectedItem(), styleComboBox.getSelectionModel().getSelectedItem(), sizeView.getSelectionModel().getSelectedItem(), sampleLabel));
+		fontView.getSelectionModel().select(editor.getFont().getFamily());
+		sizeView.getSelectionModel().select(new Integer((int) editor.getFont().getSize()));
+		styleComboBox.getSelectionModel().select(FontManager.stringToFontStyle(editor.getFont().getStyle()));
+		sampleLabel.setFont(editor.getFont());
 		
-		// show the dialog
-		fontDialog.show();
+		// add change listener to make the label respond to selected font
+		styleComboBox.getSelectionModel().selectedItemProperty()
+				.addListener(changeListener -> FontManager.setLabelFont(fontView.getSelectionModel().getSelectedItem(),
+						styleComboBox.getSelectionModel().getSelectedItem(), sizeView.getSelectionModel().getSelectedItem(), sampleLabel));
+		fontView.getSelectionModel().selectedItemProperty()
+				.addListener(changeListener -> FontManager.setLabelFont(fontView.getSelectionModel().getSelectedItem(),
+						styleComboBox.getSelectionModel().getSelectedItem(), sizeView.getSelectionModel().getSelectedItem(), sampleLabel));
+		sizeView.getSelectionModel().selectedItemProperty()
+				.addListener(changeListener -> FontManager.setLabelFont(fontView.getSelectionModel().getSelectedItem(),
+						styleComboBox.getSelectionModel().getSelectedItem(), sizeView.getSelectionModel().getSelectedItem(), sampleLabel));
+		
+		// show the dialog and set the font to editor as per selected font
+		try {
+			fontDialog.showAndWait().filter(button -> button == ButtonType.OK).ifPresent(button -> {
+				String name = fontView.getSelectionModel().getSelectedItem();
+				String style = styleComboBox.getSelectionModel().getSelectedItem();
+				Integer size = sizeView.getSelectionModel().getSelectedItem();
+				
+				editor.setFont(Font.font(name, FontManager.stringToFontWeight(style), FontManager.stringToFontPosture(style),
+						(size == null) ? FontManager.FONT_DEFAULT.getSize() : size), FontManager.stringToFontWeight(style));
+			});
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+			
+		}
 		
 	}
 	
@@ -311,7 +366,6 @@ public class SceneCreator {
 		
 		// set properties
 		
-		
 		openMenuItem.setOnAction(eventHandler -> displayFileOpener());
 		
 		saveAsMenuItem.setOnAction(eventHandler -> displayFileSaver());
@@ -321,7 +375,7 @@ public class SceneCreator {
 			System.exit(0);
 		});
 		
-		//set shortcuts
+		// set shortcuts
 		newMenuItem.setAccelerator(new KeyCodeCombination(KeyCode.N, KeyCombination.CONTROL_DOWN));
 		openMenuItem.setAccelerator(new KeyCodeCombination(KeyCode.O, KeyCombination.CONTROL_DOWN));
 		saveMenuItem.setAccelerator(new KeyCodeCombination(KeyCode.S, KeyCombination.CONTROL_DOWN));
@@ -349,7 +403,7 @@ public class SceneCreator {
 		findMenuItem.setOnAction(eventHandler -> displayFindDialog());
 		replaceMenuItem.setOnAction(eventHandler -> displayReplaceDialog());
 		
-		//set shortcuts
+		// set shortcuts
 		cutMenuItem.setAccelerator(new KeyCodeCombination(KeyCode.X, KeyCombination.CONTROL_DOWN));
 		copyMenuItem.setAccelerator(new KeyCodeCombination(KeyCode.C, KeyCombination.CONTROL_DOWN));
 		pasteMenuItem.setAccelerator(new KeyCodeCombination(KeyCode.V, KeyCombination.CONTROL_DOWN));
@@ -357,9 +411,6 @@ public class SceneCreator {
 		replaceMenuItem.setAccelerator(new KeyCodeCombination(KeyCode.H, KeyCombination.CONTROL_DOWN));
 		// add to editMenu
 		editMenu.getItems().addAll(cutMenuItem, copyMenuItem, pasteMenuItem, deleteMenuItem, findMenuItem, replaceMenuItem);
-		
-	
-		
 		
 		/** format menu **/
 		Menu formatMenu = new Menu("Format");
