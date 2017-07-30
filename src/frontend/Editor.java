@@ -1,9 +1,13 @@
 package frontend;
 
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
+
 import javax.swing.JScrollPane;
 import javax.swing.JTextPane;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingUtilities;
+
 
 import javafx.embed.swing.SwingNode;
 import javafx.scene.text.Font;
@@ -17,7 +21,9 @@ public class Editor extends SwingNode {
 	private JTextPane	textPane;
 	private JScrollPane	scrollPane;
 	
-	
+	public static enum Direction {
+		UP, DOWN;
+	};
 	
 	public Editor() {
 		
@@ -71,5 +77,41 @@ public class Editor extends SwingNode {
 		
 		return FontManager.getFxFont(textPane.getFont());
 	}
+	
+	
+	
+	/** Create a compiled pattern based on the arguments **/
+	//TODO implement
+	private Pattern createCompiledPattern(String exp, boolean matchCase, boolean wholeWord){
+	
+		return null;
+	}
+	
+	
+	/**
+	 *  Selects the next word in the given direction **/
+	//TODO implement
+	public void find(String what, Direction direction, boolean matchCase, boolean wholeWord){
+		
+	
+	}
+	
+	
+	//TODO implement
+	public void replace(String what, String with, boolean matchCase){
+		
+	}
+	
+	// TODO implement
+	public void replaceAll(String what, String with, boolean matchCase){
+		
+	}
+	
+	
+	
+	
+	
+	
+	
 	
 }
