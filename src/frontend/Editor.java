@@ -21,14 +21,20 @@ public class Editor extends SwingNode {
 	private JTextPane	textPane;
 	private JScrollPane	scrollPane;
 	
-	public static enum Direction {
-		UP, DOWN;
-	};
+	private boolean updateMatcher = true;
+	private Matcher matcher;
+	
 	
 	public Editor() {
 		
 		createSwingContent();
 		
+	}
+	
+	
+	
+	public void updateMatcher(){
+		updateMatcher = true;
 	}
 	
 	
@@ -80,38 +86,54 @@ public class Editor extends SwingNode {
 	
 	
 	
-	/** Create a compiled pattern based on the arguments **/
-	//TODO implement
-	private Pattern createCompiledPattern(String exp, boolean matchCase, boolean wholeWord){
 	
-		return null;
+	
+	/** Creates a new matcher object for a specific regex **/
+	private Matcher createMatcher(String regex, boolean matchCase, boolean wholeWord){
+		
+		
+		String newRegex = (wholeWord)?"\\b"+regex+"\\b" : regex;
+		Pattern pattern = (matchCase) ? Pattern.compile(newRegex) : Pattern.compile(newRegex, Pattern.CASE_INSENSITIVE);
+		Matcher matcher = pattern.matcher(textPane.getText());
+		return matcher;
 	}
+	
 	
 	
 	/**
-	 *  Selects the next word in the given direction **/
-	//TODO implement
-	public void find(String what, Direction direction, boolean matchCase, boolean wholeWord){
+	 *  Selects the next word . Creates the new matcher if required**/
+	public  boolean find(String findWhat, boolean matchCase, boolean wholeWord){
+	 
 		
-	
+		if(updateMatcher){
+			matcher = createMatcher(findWhat, matchCase, wholeWord);
+			updateMatcher = false;
+		}
+		
+	 	boolean found = matcher.find();
+	 
+	 	if(found){
+	 		textPane.setSelectionStart(matcher.start());
+	 		textPane.setSelectionEnd(matcher.end());
+	 	}
+	 		
+	 	return found;
 	}
 	
 	
-	//TODO implement
-	public void replace(String what, String with, boolean matchCase){
-		
+	
+	//Replace the selected text with given text
+	public void replaceSelected(String replaceWith){
+		textPane.replaceSelection(replaceWith);
 	}
 	
-	// TODO implement
-	public void replaceAll(String what, String with, boolean matchCase){
+	/** Replace all occurrence of given string with specified string **/
+	public void replaceAll(String findWhat, String replaceWith, boolean matchCase){
 		
+		matcher = createMatcher(findWhat, matchCase, false);
+		textPane.setText(matcher.replaceAll(replaceWith));
+	
 	}
-	
-	
-	
-	
-	
-	
 	
 	
 }
