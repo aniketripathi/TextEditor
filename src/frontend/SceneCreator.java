@@ -1,6 +1,7 @@
 package frontend;
 
 import java.util.ArrayList;
+
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
@@ -33,8 +34,11 @@ import javafx.scene.layout.CornerRadii;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
@@ -45,10 +49,10 @@ public class SceneCreator {
 	private BorderPane	rootNode;
 	private MenuBar		menuBar;
 	private FileChooser	fileChoser;
-	
+	private TextFlow	textFlow;
 	private Scene	primaryScene;
 	private Stage	stage;
-	
+	private StackPane stackPane;
 	
 	
 	public SceneCreator(Stage stage) {
@@ -63,7 +67,7 @@ public class SceneCreator {
 		return primaryScene;
 	}
 	
-	
+
 	
 	private void init(Stage stage) {
 		
@@ -72,6 +76,11 @@ public class SceneCreator {
 		menuBar = new MenuBar();
 		fileChoser = new FileChooser();
 		primaryScene = new Scene(rootNode);
+		textFlow = new TextFlow();
+		textFlow.getChildren().add(new Text("Hello"));
+		stackPane = new StackPane();
+		
+		stackPane.getChildren().add(textFlow);
 		
 		rootNode.setTop(menuBar);
 		
