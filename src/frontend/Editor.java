@@ -1,12 +1,20 @@
 package frontend;
 
 import java.util.regex.Pattern;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
 import java.util.regex.Matcher;
 
+import javax.swing.BoxLayout;
+import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextPane;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingUtilities;
+import javax.swing.border.Border;
+import javax.swing.border.EmptyBorder;
+
 
 
 import javafx.embed.swing.SwingNode;
@@ -20,6 +28,9 @@ public class Editor extends SwingNode {
 	
 	private JTextPane	textPane;
 	private JScrollPane	scrollPane;
+	private	JPanel 		panel;
+	
+	private Customizer customizer;
 	
 	private boolean updateMatcher = true;
 	private Matcher matcher;
@@ -28,9 +39,12 @@ public class Editor extends SwingNode {
 	public Editor() {
 		
 		createSwingContent();
-		
 	}
 	
+	
+	public Customizer getCustomizer(){
+			return customizer;
+	}
 	
 	
 	public void updateMatcher(){
@@ -40,21 +54,26 @@ public class Editor extends SwingNode {
 	
 	
 	private void createSwingContent() {
-		
-		SwingUtilities.invokeLater(() -> {
+			
+			panel = new JPanel(new BorderLayout());
+			
+			SwingUtilities.invokeLater(() -> {
 			
 			textPane = new JTextPane();
 			
-			scrollPane = new JScrollPane(textPane, ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
-			scrollPane.getHorizontalScrollBar().setVisible(true);
-			scrollPane.setSize(400, 400);
+			scrollPane = new JScrollPane(panel);
+			
+			
+			panel.add(textPane); 
+			panel.setBorder(new EmptyBorder(20, 20, 20, 20));
 			
 			// Set default Font
 			this.setFont(FontManager.FONT_DEFAULT, FontWeight.NORMAL);
-			this.setContent(textPane);
+			this.setContent(scrollPane);
 		});
 		
 	}
+	
 	
 	
 	
@@ -63,6 +82,12 @@ public class Editor extends SwingNode {
 		textPane.setEditable(editable);
 	}
 	
+	
+	public void setSize(int width, int height){
+	
+		textPane.setSize(width, height);
+		
+	}
 	
 	
 	public boolean getEditable() {
