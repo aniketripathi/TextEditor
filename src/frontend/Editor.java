@@ -33,7 +33,9 @@ import text_handler.FontManager;
 
 
 
-public class Editor extends SwingNode {
+public class Editor  {
+	
+	private SwingNode	swingNode;
 	
 	private JTextPane	textPane;
 	private JScrollPane	scrollPane;
@@ -142,8 +144,9 @@ public class Editor extends SwingNode {
 	
 	
 	
-	public Editor() {
+	public Editor(SwingNode swingNode) {
 		
+		this.swingNode = swingNode;
 		createSwingContent();
 		
 		
@@ -156,13 +159,13 @@ public class Editor extends SwingNode {
 	}
 	
 	
-	public void updateMatcher(){
+	public final void updateMatcher(){
 		updateMatcher = true;
 	}
 	
 	
 	
-	private void createSwingContent() {
+	protected void createSwingContent() {
 			
 			panel = new JPanel(new BorderLayout());
 			
@@ -173,7 +176,7 @@ public class Editor extends SwingNode {
 	
 			panel.add(textPane); 
 			
-			this.setContent(scrollPane);
+			swingNode.setContent(scrollPane);
 			
 			initialize();
 			customizer = new Customizer();
@@ -181,7 +184,7 @@ public class Editor extends SwingNode {
 					
 	}
 	
-	public void initialize(){
+	protected void initialize(){
 		
 		// Add document listener
 		textPane.getDocument().addDocumentListener(new DocumentListener(){
@@ -299,15 +302,18 @@ public class Editor extends SwingNode {
 			
 	}
 		
-	public void loadFromFile(File file)throws IOException {
+	public void readFromFile(File file)throws IOException {
 		
 			textPane.read(new BufferedReader(new FileReader(file)), file);
 	}
 	
 	
+	public void clear(){
+		textPane.setText(null);
+	}
 	
 	/** Creates a new matcher object for a specific regex **/
-	private Matcher createMatcher(String regex, boolean matchCase, boolean wholeWord){
+	protected Matcher createMatcher(String regex, boolean matchCase, boolean wholeWord){
 		
 		
 		String newRegex = (wholeWord)?"\\b"+regex+"\\b" : regex;
@@ -320,7 +326,7 @@ public class Editor extends SwingNode {
 	
 	/**
 	 *  Selects the next word . Creates the new matcher if required**/
-	public  boolean find(String findWhat, boolean matchCase, boolean wholeWord){
+	protected  boolean find(String findWhat, boolean matchCase, boolean wholeWord){
 	 
 		
 		if(updateMatcher){
