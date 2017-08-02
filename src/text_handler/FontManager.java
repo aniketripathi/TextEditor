@@ -13,7 +13,7 @@ import javafx.scene.text.FontWeight;
 
 public class FontManager {
 	
-	public static final Font	FONT_DEFAULT		= Font.getDefault();
+	public static final Font	FONT_DEFAULT		= new Font(20);
 	public static final int		SIZE_UPPER_RANGE	= 72;
 	public static final int		SIZE_LOWER_RANGE	= 2;
 	
@@ -108,7 +108,7 @@ public class FontManager {
 	public static Font getFxFont(java.awt.Font awtFont) {
 		
 		String name = awtFont.getFamily();
-		System.out.println(name);
+		
 		FontWeight weight = ((awtFont.getStyle() & java.awt.Font.BOLD) != 0) ? FontWeight.BOLD : FontWeight.NORMAL;
 		FontPosture posture = ((awtFont.getStyle() & java.awt.Font.ITALIC) != 0) ? FontPosture.ITALIC : FontPosture.REGULAR;
 		
