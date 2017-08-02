@@ -1,6 +1,9 @@
 package frontend;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Optional;
 
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -39,7 +42,7 @@ import javafx.scene.text.Font;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import text_handler.FontManager;
-
+import javafx.embed.swing.SwingNode;
 
 
 public class SceneCreator {
@@ -51,8 +54,8 @@ public class SceneCreator {
 	private Scene	primaryScene;
 	private Stage	stage;
 	private Editor	editor;
-	
-	
+	private File 	currentFile = null;
+	private SwingNode swingNode;
 	
 	public SceneCreator(Stage stage) {
 		init(stage);		// initialize
@@ -78,33 +81,56 @@ public class SceneCreator {
 		menuBar = new MenuBar();
 		fileChoser = new FileChooser();
 		primaryScene = new Scene(rootNode);
-		editor = new Editor();
+		swingNode = new SwingNode();
+		editor = new Editor(swingNode);
 		
 		// editor.setFont(FontManager.FONT_DEFAULT, FontWeight.NORMAL);
 		
 		rootNode.setTop(menuBar);
-		rootNode.setCenter(editor);
+		rootNode.setCenter(swingNode);
 		
 	}
 	
 	
 	
-	private void displayFileOpener() {
+	private File displayFileOpener() {
 		
+	String fileName = "new_file.txt";
+	File 	directory = null;
+	if(currentFile != null){
+		directory = currentFile.getParentFile();
+		fileName = currentFile.getName();
+	}
+	
 		fileChoser.setTitle("Open");
-		fileChoser.showOpenDialog(stage);
+			if(directory != null && directory.isDirectory())
+				fileChoser.setInitialDirectory(directory);
+		fileChoser.setInitialFileName(fileName);
+		return fileChoser.showOpenDialog(stage);
+	
 	}
 	
 	
 	
-	private void displayFileSaver() {
+	private File displayFileSaver() {
+		
+		String fileName = "new_file.txt";
+		File 	directory = null;
+		if(currentFile != null){
+			directory = currentFile.getParentFile();
+			fileName = currentFile.getName();
+		}
+		
 		
 		fileChoser.setTitle("Save");
-		fileChoser.showSaveDialog(stage);
+		if(directory != null && directory.isDirectory())
+			fileChoser.setInitialDirectory(directory);
+		fileChoser.setInitialFileName(fileName);
+		return fileChoser.showSaveDialog(stage);
 	}
 	
 	
-	
+	//TODO remoev the direction
 	/** Creates and displays a new find dialog **/
 	private void displayFindDialog() {
 		
@@ -119,9 +145,9 @@ public class SceneCreator {
 				buttonContainer = new VBox();
 		
 		HBox findBox = new HBox();
-		Label find = new Label("Find");
+		Label findLabel = new Label("Find");
 		TextField findWhat = new TextField();
-		findBox.getChildren().addAll(find, findWhat);
+		findBox.getChildren().addAll(findLabel, findWhat);
 		
 		HBox directionBox = new HBox();
 		Label directionLabel = new Label("Direction:");
@@ -152,6 +178,18 @@ public class SceneCreator {
 		topContainer.setSpacing(20);
 		
 		findDialog.setResizable(false);
+		
+		
+		//set listener
+		
+		findWhat.textProperty().addListener( (arg) -> editor.updateMatcher());
+		
+		//set button actions
+			findNext.setOnAction(event -> {
+				editor.find(findWhat.getText(), caseCheckBox.isSelected(), false); //TODO add whole word option and remove direction
+			});
+		
+			
 		
 		// show the dialog
 		findDialog.showAndWait();
@@ -210,6 +248,14 @@ public class SceneCreator {
 		replaceAll.setMaxWidth(Double.MAX_VALUE);
 		
 		replaceDialog.setResizable(false);
+		
+		// add listener
+		   findWhat.textProperty().addListener(arg -> editor.updateMatcher());
+		   
+		   //add actions to buttons
+		   findNext.setOnAction(event -> editor.find(findWhat.getText(), caseCheckBox.isSelected(), false));
+		   replace.setOnAction(event -> editor.replaceSelected(replaceWith.getText()));
+		   replaceAll.setOnAction(event -> editor.replaceAll(findWhat.getText(), replaceWith.getText(), caseCheckBox.isSelected()));
 		
 		// show the dialog
 		replaceDialog.showAndWait();
@@ -348,6 +394,29 @@ public class SceneCreator {
 	
 	
 	
+	private boolean askConfirmation(String title, String content){
+		
+		boolean confirm = false;
+		Alert confirmation = new Alert(AlertType.CONFIRMATION);
+		confirmation.setTitle(title);
+		confirmation.setContentText(content);
+		Optional<ButtonType> result = confirmation.showAndWait();
+		
+		if(result.isPresent() && result.get() == ButtonType.OK)
+			confirm = true;
+		
+		
+		return confirm;
+	}
+	
+	
+	private void showError(String title, String errorMessage){
+		Alert error = new Alert(AlertType.ERROR);
+		error.setTitle("File Opening failed!");
+		error.setContentText("Unable to load the file. File not supported");
+	}
+	
+	
 	private void addMenus() {
 		
 		/** File Menu **/
@@ -366,11 +435,80 @@ public class SceneCreator {
 		
 		// set properties
 		
-		openMenuItem.setOnAction(eventHandler -> displayFileOpener());
 		
-		saveAsMenuItem.setOnAction(eventHandler -> displayFileSaver());
 		
-		exitMenuItem.setOnAction(eventHandler -> {
+		newMenuItem.setOnAction(event -> {
+					boolean changed = editor.contentChanged();
+					if(!changed ||
+						(changed && askConfirmation("Discard Changes!", "You have unsaved changes. Are you sure you want to create a new file without saving"))){
+						editor.clear();
+					currentFile = null;	
+					}
+		});
+		
+		
+		
+		openMenuItem.setOnAction(event -> {	
+			boolean changed = editor.contentChanged();
+			if(!changed ||
+			(changed && askConfirmation("Discard Changes!" , "You have unsaved changes. Are you sure you want to open without saving?") )) {
+				File file = displayFileOpener();
+				if(file != null) {
+					
+					currentFile = file;
+					try {
+						if(file.canRead())
+							editor.readFromFile(file);
+						else
+							showError("File Open Failed","Cannot rsead file");	
+							
+						}
+					catch (IOException e) {
+							showError("File Open Failed!", "An error occurred while saving the file. Please check whether the file format is appropriate.");
+						}
+					
+					}
+				}
+			});
+		
+		
+		
+		
+		saveMenuItem.setOnAction(event ->  {
+			if(currentFile == null)
+				saveAsMenuItem.fire();
+			else {
+				try {
+					if(currentFile.canWrite())
+						editor.writeToFile(currentFile);
+					else showError("File Save Failed", "Cannot save file. Please check if you have required permissions");
+				}
+				catch (IOException e) {
+					showError("File Save Failed", "An error occurred while saving the current file.");
+				}
+			}
+		});
+		
+		
+			
+		saveAsMenuItem.setOnAction(event -> { 
+			File file = displayFileSaver();
+			if(file != null){
+				currentFile = file;
+				try {
+					if(file.canWrite())
+						editor.writeToFile(file);
+					else 
+						showError("File Save Failed", "Cannot save file. Please check if you have required permissions");
+				}
+				catch (IOException e) {
+					showError("File Save failed", "An error occurred while saving the file.");
+				}
+			}
+			
+		});
+		
+		exitMenuItem.setOnAction(event -> {
 			Platform.exit();
 			System.exit(0);
 		});
@@ -400,8 +538,16 @@ public class SceneCreator {
 		replaceMenuItem = new MenuItem("Replace");
 		
 		// set properties
-		findMenuItem.setOnAction(eventHandler -> displayFindDialog());
-		replaceMenuItem.setOnAction(eventHandler -> displayReplaceDialog());
+		
+		
+		cutMenuItem.setOnAction(event -> editor.cut());
+		copyMenuItem.setOnAction(event -> editor.copy());
+		pasteMenuItem.setOnAction(event -> editor.paste());
+		deleteMenuItem.setOnAction(event -> editor.deleteSelected());
+		
+		
+		findMenuItem.setOnAction(event -> displayFindDialog());
+		replaceMenuItem.setOnAction(event -> displayReplaceDialog());
 		
 		// set shortcuts
 		cutMenuItem.setAccelerator(new KeyCodeCombination(KeyCode.X, KeyCombination.CONTROL_DOWN));
@@ -423,7 +569,7 @@ public class SceneCreator {
 		fontMenuItem = new MenuItem("Font");
 		
 		// set properties
-		fontMenuItem.setOnAction(eventHandler -> displayFontDialog());
+		fontMenuItem.setOnAction(event -> displayFontDialog());
 		
 		// add to menu
 		formatMenu.getItems().add(fontMenuItem);
@@ -433,7 +579,7 @@ public class SceneCreator {
 		Menu aboutMenu = new Menu("About");
 		aboutMenu.setId("aboutMenu");
 		
-		aboutMenu.setOnAction(eventHandler -> displayAboutDialog());
+		aboutMenu.setOnAction(event -> displayAboutDialog());
 		
 		// menu items
 		MenuItem aboutTextEditor;
