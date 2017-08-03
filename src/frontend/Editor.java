@@ -199,13 +199,17 @@ public class Editor  {
 			@Override
 			public void insertUpdate(DocumentEvent arg0) {
 				
-			contentChanged = true;
+
+					contentChanged = true;
 				
 			}
 
 			@Override
 			public void removeUpdate(DocumentEvent arg0) {
+
 				contentChanged = true;
+				if(textPane.getText() == null || textPane.getText().isEmpty())
+					contentChanged = false;
 				
 			}
 			
