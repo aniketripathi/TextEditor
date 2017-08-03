@@ -243,6 +243,9 @@ public class Editor  {
 		}
 	
 	
+	public void setContentChanged(boolean contentChanged){
+		this.contentChanged = contentChanged;
+	}
 	
 	public void cut(){
 		Action cut = editorKitActions.get(DefaultEditorKit.cutAction);
@@ -279,6 +282,9 @@ public class Editor  {
 		return textPane.isEditable();
 	}
 	
+	public String getSelectedText(){
+		return textPane.getSelectedText();
+	}
 	
 	
 	public void setFont(Font font, FontWeight weight) {
@@ -294,7 +300,7 @@ public class Editor  {
 	}
 	
 	
-	
+	/** Writes the content of the editor to the specified file **/
 	public void writeToFile(File file)throws IOException {
 		
 			textPane.write(new BufferedWriter(new FileWriter(file)));
@@ -302,6 +308,7 @@ public class Editor  {
 			
 	}
 		
+	/** Reads data from the specified file and loads it into the editor **/
 	public void readFromFile(File file)throws IOException {
 		
 			textPane.read(new BufferedReader(new FileReader(file)), file);
@@ -327,7 +334,8 @@ public class Editor  {
 	/**
 	 *  Selects the next word . Creates the new matcher if required**/
 	protected  boolean find(String findWhat, boolean matchCase, boolean wholeWord){
-	 
+		if(findWhat == null || findWhat.isEmpty())
+			return false;
 		
 		if(updateMatcher){
 			matcher = createMatcher(findWhat, matchCase, wholeWord);
@@ -347,16 +355,32 @@ public class Editor  {
 	
 	
 	//Replace the selected text with given text
-	public void replaceSelected(String replaceWith){
+	public void replaceSelected(String replaceWhat, String replaceWith, boolean matchCase, boolean wholeWord){
+		
+		if(replaceWhat == null || replaceWhat.isEmpty())
+			return;
+		
+		if(updateMatcher){
+			matcher = createMatcher(replaceWhat, matchCase, wholeWord);
+			find(replaceWhat, matchCase, wholeWord);
+		}
+			
+		updateMatcher = true;
 		textPane.replaceSelection(replaceWith);
+		textPane.setSelectionEnd(textPane.getSelectionStart() + replaceWith.length());
 	}
 	
 	/** Replace all occurrence of given string with specified string **/
-	public void replaceAll(String findWhat, String replaceWith, boolean matchCase){
+	public void replaceAll(String replaceWhat, String replaceWith, boolean matchCase, boolean wholeWord){
 		
-		matcher = createMatcher(findWhat, matchCase, false);
+		if(replaceWhat == null || replaceWhat.isEmpty())
+			return;
+		
+		if(updateMatcher)
+			matcher = createMatcher(replaceWhat, matchCase, wholeWord);
+		
 		textPane.setText(matcher.replaceAll(replaceWith));
-	
+		updateMatcher = true;
 	}
 	
 	
