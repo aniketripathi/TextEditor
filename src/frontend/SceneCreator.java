@@ -94,6 +94,11 @@ public class SceneCreator {
 	}
 	
 	
+	private void closeApplication(){
+		Platform.exit();
+		System.gc();
+		System.exit(0);
+	}
 	
 	private File displayFileOpener() {
 		
@@ -530,6 +535,9 @@ public class SceneCreator {
 			if(file != null){
 				currentFile = file;
 				try {
+					if(!file.exists())
+						file.createNewFile();
+					
 					if(file.canWrite())
 						editor.writeToFile(file);
 					else 
@@ -543,8 +551,10 @@ public class SceneCreator {
 		});
 		
 		exitMenuItem.setOnAction(event -> {
-			Platform.exit();
-			System.exit(0);
+			boolean changed = editor.contentChanged();
+			if(!changed ||
+					(changed && askConfirmation("Discard Changes!", "You have unsaved changes. Are you sure you want to exit?")))
+				closeApplication();
 		});
 		
 		// set shortcuts
