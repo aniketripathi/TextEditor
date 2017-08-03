@@ -7,6 +7,7 @@ import java.util.Optional;
 
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
+import javafx.embed.swing.SwingNode;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -22,9 +23,7 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
-import javafx.scene.control.RadioButton;
 import javafx.scene.control.TextField;
-import javafx.scene.control.ToggleGroup;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
@@ -36,13 +35,14 @@ import javafx.scene.layout.BorderWidths;
 import javafx.scene.layout.CornerRadii;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
+import javafx.scene.text.TextAlignment;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import text_handler.FontManager;
-import javafx.embed.swing.SwingNode;
 
 
 public class SceneCreator {
@@ -56,6 +56,8 @@ public class SceneCreator {
 	private Editor	editor;
 	private File 	currentFile = null;
 	private SwingNode swingNode;
+	
+	
 	
 	public SceneCreator(Stage stage) {
 		init(stage);		// initialize
@@ -130,7 +132,6 @@ public class SceneCreator {
 	}
 	
 	
-	//TODO remoev the direction
 	/** Creates and displays a new find dialog **/
 	private void displayFindDialog() {
 		
@@ -140,29 +141,32 @@ public class SceneCreator {
 		
 		Dialog<Void> findDialog = new Dialog<Void>();
 		
+		
+		
 		HBox topContainer = new HBox();
 		VBox dataContainer = new VBox(),
 				buttonContainer = new VBox();
 		
 		HBox findBox = new HBox();
 		Label findLabel = new Label("Find");
-		TextField findWhat = new TextField();
+		TextField findWhat = new TextField(editor.getSelectedText());
 		findBox.getChildren().addAll(findLabel, findWhat);
 		
-		HBox directionBox = new HBox();
-		Label directionLabel = new Label("Direction:");
-		ToggleGroup directionToggleGroup = new ToggleGroup();
-		RadioButton upRadioButton = new RadioButton("Up");
-		upRadioButton.setToggleGroup(directionToggleGroup);
-		RadioButton downRadioButton = new RadioButton("Down");
-		downRadioButton.setToggleGroup(directionToggleGroup);
-		directionBox.getChildren().addAll(directionLabel, upRadioButton, downRadioButton);
 		
 		CheckBox caseCheckBox = new CheckBox("Match Case");
-		dataContainer.getChildren().addAll(findBox, directionBox, caseCheckBox);
+		CheckBox wholeCheckBox = new CheckBox("Whole Word");
+		dataContainer.getChildren().addAll(findBox, wholeCheckBox, caseCheckBox);
 		
 		Button findNext = new Button("Find Next");
 		buttonContainer.getChildren().add(findNext);
+		
+		
+		
+		BorderPane statusPane = new BorderPane();
+		Label statusLabel = new Label("Search string");
+		statusLabel.setFont(new Font(12));
+		statusPane.setBottom(statusLabel);
+		dataContainer.getChildren().add(statusPane);
 		
 		topContainer.getChildren().addAll(dataContainer, buttonContainer);
 		findDialog.getDialogPane().setContent(topContainer);
@@ -173,20 +177,26 @@ public class SceneCreator {
 		findDialog.setTitle("Find");
 		
 		findBox.setSpacing(5);
-		directionBox.setSpacing(10);
 		dataContainer.setSpacing(10);
 		topContainer.setSpacing(20);
 		
 		findDialog.setResizable(false);
+		findWhat.requestFocus();
 		
 		
 		//set listener
 		
-		findWhat.textProperty().addListener( (arg) -> editor.updateMatcher());
-		
+		   findWhat.textProperty().addListener(arg -> editor.updateMatcher());
+		   caseCheckBox.selectedProperty().addListener(arg -> editor.updateMatcher());
+		   wholeCheckBox.selectedProperty().addListener(arg -> editor.updateMatcher());	
 		//set button actions
 			findNext.setOnAction(event -> {
-				editor.find(findWhat.getText(), caseCheckBox.isSelected(), false); //TODO add whole word option and remove direction
+				
+				boolean found = editor.find(findWhat.getText(), caseCheckBox.isSelected(), wholeCheckBox.isSelected()); 
+				if(found)
+					statusLabel.setText("Matching string found!");
+				else 
+					statusLabel.setText("No more matches!");
 			});
 		
 			
@@ -221,11 +231,19 @@ public class SceneCreator {
 		replaceBox.getChildren().addAll(replaceLabel, replaceWith);
 		
 		CheckBox caseCheckBox = new CheckBox("Match Case");
-		dataContainer.getChildren().addAll(findBox, replaceBox, caseCheckBox);
+		CheckBox wholeCheckBox = new CheckBox("Whole Word");
+		dataContainer.getChildren().addAll(findBox, replaceBox, caseCheckBox, wholeCheckBox);
 		
 		Button findNext = new Button("Find Next");
 		Button replace = new Button("Replace");
 		Button replaceAll = new Button("ReplaceAll");
+		
+		
+		BorderPane statusPane = new BorderPane();
+		Label statusLabel = new Label("Search string");
+		statusLabel.setFont(new Font(12));
+		statusPane.setBottom(statusLabel);
+		dataContainer.getChildren().add(statusPane);
 		
 		buttonContainer.getChildren().addAll(findNext, replace, replaceAll);
 		
@@ -248,15 +266,18 @@ public class SceneCreator {
 		replaceAll.setMaxWidth(Double.MAX_VALUE);
 		
 		replaceDialog.setResizable(false);
-		
+		findWhat.requestFocus();
 		// add listener
 		   findWhat.textProperty().addListener(arg -> editor.updateMatcher());
+		   caseCheckBox.selectedProperty().addListener(arg -> editor.updateMatcher());
+		   wholeCheckBox.selectedProperty().addListener(arg -> editor.updateMatcher());
 		   
 		   //add actions to buttons
-		   findNext.setOnAction(event -> editor.find(findWhat.getText(), caseCheckBox.isSelected(), false));
-		   replace.setOnAction(event -> editor.replaceSelected(replaceWith.getText()));
-		   replaceAll.setOnAction(event -> editor.replaceAll(findWhat.getText(), replaceWith.getText(), caseCheckBox.isSelected()));
+		   findNext.setOnAction(event -> editor.find(findWhat.getText(), caseCheckBox.isSelected(), wholeCheckBox.isSelected()));
+		   replace.setOnAction(event -> editor.replaceSelected(findWhat.getText(), replaceWith.getText(), caseCheckBox.isSelected(), wholeCheckBox.isSelected()));
+		   replaceAll.setOnAction(event -> editor.replaceAll(findWhat.getText(), replaceWith.getText(), caseCheckBox.isSelected(), wholeCheckBox.isSelected()));
 		
+		   
 		// show the dialog
 		replaceDialog.showAndWait();
 		
@@ -298,11 +319,11 @@ public class SceneCreator {
 		GridPane gridPane = new GridPane();
 		
 		HBox fontBox = new HBox();
-		
 		Label fontLabel = new Label("Font");
-		ListView<String> fontView = new ListView<String>(FXCollections.observableList(Font.getFamilies()));
+		ListView<String> fontView = new ListView<String>(FontManager.fontFamilies);
 		fontBox.getChildren().addAll(fontLabel, fontView);
 		gridPane.add(fontBox, 0, 0);
+		
 		
 		HBox sizeBox = new HBox();
 		Label sizeLabel = new Label("Size");
@@ -311,6 +332,8 @@ public class SceneCreator {
 		gridPane.add(sizeBox, 1, 0);
 		
 		HBox styleBox = new HBox();
+		
+		
 		Label styleLabel = new Label("Style");
 		ArrayList<String> styleList = new ArrayList<String>();
 		styleList.add("Normal");
@@ -319,14 +342,15 @@ public class SceneCreator {
 		styleList.add("Bold and Italic");
 		ComboBox<String> styleComboBox = new ComboBox<String>(FXCollections.observableList(styleList));
 		styleBox.getChildren().addAll(styleLabel, styleComboBox);
-		gridPane.add(styleBox, 2, 0);
+		gridPane.add(styleBox, 0, 1);
 		
 		HBox sampleBox = new HBox();
 		
 		Border border = new Border(new BorderStroke(javafx.scene.paint.Color.WHITE, BorderStrokeStyle.SOLID, CornerRadii.EMPTY, new BorderWidths(2)));
 		Label sampleLabel = new Label("ABC");
-		gridPane.add(sampleBox, 0, 1);
-		gridPane.setPrefSize(Region.USE_COMPUTED_SIZE, Region.USE_COMPUTED_SIZE);
+		
+		gridPane.add(sampleBox, 2, 0);
+		
 		
 		fontDialog.getDialogPane().setContent(gridPane);
 		
@@ -343,19 +367,20 @@ public class SceneCreator {
 		
 		sizeBox.setSpacing(10);
 		sizeView.setEditable(false);
-		sizeView.setMaxHeight(150);
+		sizeView.setMaxHeight(200);
 		sizeView.setMaxWidth(75);
-		
 		styleBox.setSpacing(10);
 		styleComboBox.setMaxWidth(120);
 		
 		sampleBox.setAlignment(Pos.CENTER);
 		sampleLabel.setPadding(new Insets(10));
 		sampleLabel.setBorder(border);
-		sampleLabel.setMaxSize(150, 150);
-		sampleLabel.setMinSize(50, 50);
+		sampleLabel.setMaxSize(150, 180);
+		sampleLabel.setMinSize(150, 100);
+		sampleLabel.setAlignment(Pos.CENTER);
+		sampleLabel.setTextAlignment(TextAlignment.CENTER);
 		sampleBox.getChildren().add(sampleLabel);
-		
+		gridPane.setPrefSize(500, 225);
 		// set default font
 		
 		fontView.getSelectionModel().select(editor.getFont().getFamily());
@@ -398,8 +423,12 @@ public class SceneCreator {
 		
 		boolean confirm = false;
 		Alert confirmation = new Alert(AlertType.CONFIRMATION);
+		
+		confirmation.setHeaderText(null);
 		confirmation.setTitle(title);
 		confirmation.setContentText(content);
+		confirmation.getDialogPane().setPrefSize(Pane.USE_COMPUTED_SIZE, Pane.USE_COMPUTED_SIZE);
+		
 		Optional<ButtonType> result = confirmation.showAndWait();
 		
 		if(result.isPresent() && result.get() == ButtonType.OK)
@@ -412,8 +441,10 @@ public class SceneCreator {
 	
 	private void showError(String title, String errorMessage){
 		Alert error = new Alert(AlertType.ERROR);
+		error.setHeaderText(null);
 		error.setTitle("File Opening failed!");
 		error.setContentText("Unable to load the file. File not supported");
+		error.getDialogPane().setPrefSize(Pane.USE_COMPUTED_SIZE, Pane.USE_COMPUTED_SIZE);
 	}
 	
 	
@@ -440,8 +471,9 @@ public class SceneCreator {
 		newMenuItem.setOnAction(event -> {
 					boolean changed = editor.contentChanged();
 					if(!changed ||
-						(changed && askConfirmation("Discard Changes!", "You have unsaved changes. Are you sure you want to create a new file without saving"))){
+						(changed && askConfirmation("Discard Changes!", "You have unsaved changes. Are you sure you want to create a new file without saving?"))){
 						editor.clear();
+						editor.setContentChanged(false);
 					currentFile = null;	
 					}
 		});
@@ -457,8 +489,10 @@ public class SceneCreator {
 					
 					currentFile = file;
 					try {
-						if(file.canRead())
+						if(file.canRead()){
 							editor.readFromFile(file);
+							editor.setContentChanged(false);
+						}
 						else
 							showError("File Open Failed","Cannot rsead file");	
 							
@@ -481,7 +515,7 @@ public class SceneCreator {
 				try {
 					if(currentFile.canWrite())
 						editor.writeToFile(currentFile);
-					else showError("File Save Failed", "Cannot save file. Please check if you have required permissions");
+					else showError("File Save Failed", "Cannot save file. Please check if you have required permissions.");
 				}
 				catch (IOException e) {
 					showError("File Save Failed", "An error occurred while saving the current file.");
@@ -499,7 +533,7 @@ public class SceneCreator {
 					if(file.canWrite())
 						editor.writeToFile(file);
 					else 
-						showError("File Save Failed", "Cannot save file. Please check if you have required permissions");
+						showError("File Save Failed", "Cannot save file. Please check if you have required permissions.s");
 				}
 				catch (IOException e) {
 					showError("File Save failed", "An error occurred while saving the file.");
@@ -549,12 +583,15 @@ public class SceneCreator {
 		findMenuItem.setOnAction(event -> displayFindDialog());
 		replaceMenuItem.setOnAction(event -> displayReplaceDialog());
 		
-		// set shortcuts
-		cutMenuItem.setAccelerator(new KeyCodeCombination(KeyCode.X, KeyCombination.CONTROL_DOWN));
+		// set shortcuts  Removed accelerator due to multiple response to same action
+		
+		/*cutMenuItem.setAccelerator(new KeyCodeCombination(KeyCode.X, KeyCombination.CONTROL_DOWN));
 		copyMenuItem.setAccelerator(new KeyCodeCombination(KeyCode.C, KeyCombination.CONTROL_DOWN));
 		pasteMenuItem.setAccelerator(new KeyCodeCombination(KeyCode.V, KeyCombination.CONTROL_DOWN));
-		findMenuItem.setAccelerator(new KeyCodeCombination(KeyCode.F, KeyCombination.CONTROL_DOWN));
+		*/findMenuItem.setAccelerator(new KeyCodeCombination(KeyCode.F, KeyCombination.CONTROL_DOWN));
 		replaceMenuItem.setAccelerator(new KeyCodeCombination(KeyCode.H, KeyCombination.CONTROL_DOWN));
+		
+		
 		// add to editMenu
 		editMenu.getItems().addAll(cutMenuItem, copyMenuItem, pasteMenuItem, deleteMenuItem, findMenuItem, replaceMenuItem);
 		
@@ -569,7 +606,10 @@ public class SceneCreator {
 		fontMenuItem = new MenuItem("Font");
 		
 		// set properties
-		fontMenuItem.setOnAction(event -> displayFontDialog());
+		fontMenuItem.setOnAction(event ->  {
+			displayFontDialog(); 
+			System.gc();
+		});
 		
 		// add to menu
 		formatMenu.getItems().add(fontMenuItem);
