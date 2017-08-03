@@ -10,13 +10,19 @@ import javafx.scene.text.FontPosture;
 import javafx.scene.text.FontWeight;
 
 
-
+/***
+ * This class contains utility methods for handling fonts. Some of the methods include conversion from java.awt.Font to javax.text.Font. 
+ * It is also responsible for converting different font details from one type to another. Most of the conversion include string.
+ * Provides Default font, font families and font sizes.
+ * @author aniket
+ *
+ */
 public class FontManager {
 	
 	public static final Font	FONT_DEFAULT		= new Font(20);
 	public static final int		SIZE_UPPER_RANGE	= 72;
 	public static final int		SIZE_LOWER_RANGE	= 2;
-	
+	public static final ObservableList<String> fontFamilies = FXCollections.observableList(Font.getFamilies());	
 	
 	
 	public static ObservableList<Integer> getAllSizes() {
@@ -74,11 +80,15 @@ public class FontManager {
 		
 		String style = "Normal";
 		
-		if (fontStyle.contains("Bold"))
-			style = "Bold";
+		if(fontStyle.contains("Bold") && fontStyle.contains("Italic"))
+			style = "Bold and Italic";
 		
-		if (fontStyle.contains("Italic"))
-			style = "Italic";
+		else	if (fontStyle.contains("Bold"))
+					style = "Bold";
+		
+		else	if (fontStyle.contains("Italic"))
+					style = "Italic";
+		
 		
 		return style;
 	}
