@@ -185,7 +185,19 @@ public class Editor  {
 	}
 	
 	protected void initialize(){
+			addDocumentListener();
+				// Set default Font
+		setFont(FontManager.FONT_DEFAULT, FontWeight.NORMAL);
+		// save all actions in one place
+		editorKitActions = new HashMap<Object, Action>(textPane.getEditorKit().getActions().length);
 		
+		for(Action action: textPane.getEditorKit().getActions())
+			editorKitActions.put(action.getValue(Action.NAME), action);
+	}
+
+
+	protected void addDocumentListener(){
+
 		// Add document listener
 		textPane.getDocument().addDocumentListener(new DocumentListener(){
 
@@ -194,6 +206,7 @@ public class Editor  {
 				//TODO test only for style or for text also
 				
 				contentChanged = true;
+				updateMatcher = true;
 			}
 
 			@Override
@@ -201,28 +214,23 @@ public class Editor  {
 				
 
 					contentChanged = true;
-				
+					updateMatcher = true;
 			}
 
 			@Override
 			public void removeUpdate(DocumentEvent arg0) {
 
 				contentChanged = true;
-				if(textPane.getText() == null || textPane.getText().isEmpty())
+				updateMatcher = true;
+				System.out.print("Changed");
+				if(getText() == null || getText().isEmpty())
 					contentChanged = false;
 				
 			}
 			
 		});
-		// Set default Font
-		setFont(FontManager.FONT_DEFAULT, FontWeight.NORMAL);
+
 		
-		// save all actions in one place
-		
-		editorKitActions = new HashMap<Object, Action>(textPane.getEditorKit().getActions().length);
-		
-		for(Action action: textPane.getEditorKit().getActions())
-			editorKitActions.put(action.getValue(Action.NAME), action);
 	}
 	
 	public boolean contentChanged(){
@@ -316,11 +324,29 @@ public class Editor  {
 	public void readFromFile(File file)throws IOException {
 		
 			textPane.read(new BufferedReader(new FileReader(file)), file);
+			addDocumentListener();
+	}
+
+	/**
+	 * This is a temporary method. When adding more features , add document changing features to another class.
+	 * */
+	private String getText(){
+		try {
+			return textPane.getDocument().getText(0, textPane.getDocument().getLength());
+		}
+		catch (BadLocationException e) {
+			e.printStackTrace();
+		}return null;
 	}
 	
 	
 	public void clear(){
-		textPane.setText(null);
+		try {
+			textPane.getDocument().remove(0, textPane.getDocument().getLength());
+		}
+		catch (BadLocationException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	/** Creates a new matcher object for a specific regex **/
@@ -329,7 +355,7 @@ public class Editor  {
 		
 		String newRegex = (wholeWord)?"\\b"+regex+"\\b" : regex;
 		Pattern pattern = (matchCase) ? Pattern.compile(newRegex) : Pattern.compile(newRegex, Pattern.CASE_INSENSITIVE);
-		Matcher matcher = pattern.matcher(textPane.getText());
+		Matcher matcher = pattern.matcher(getText());
 		return matcher;
 	}
 	
@@ -337,7 +363,7 @@ public class Editor  {
 	
 	/**
 	 *  Selects the next word . Creates the new matcher if required**/
-	protected  boolean find(String findWhat, boolean matchCase, boolean wholeWord){
+	public  boolean find(String findWhat, boolean matchCase, boolean wholeWord){
 		if(findWhat == null || findWhat.isEmpty())
 			return false;
 		
@@ -347,12 +373,9 @@ public class Editor  {
 		}
 		
 	 	boolean found = matcher.find();
+		if(found)
+			textPane.select(matcher.start(), matcher.end());
 	 
-	 	if(found){
-	 		textPane.setSelectionStart(matcher.start());
-	 		textPane.setSelectionEnd(matcher.end());
-	 	}
-	 		
 	 	return found;
 	}
 	
