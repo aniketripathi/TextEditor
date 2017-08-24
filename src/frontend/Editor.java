@@ -203,7 +203,6 @@ public class Editor  {
 
 			@Override
 			public void changedUpdate(DocumentEvent arg0) {
-				//TODO test only for style or for text also
 				
 				contentChanged = true;
 				updateMatcher = true;
@@ -222,7 +221,6 @@ public class Editor  {
 
 				contentChanged = true;
 				updateMatcher = true;
-				System.out.print("Changed");
 				if(getText() == null || getText().isEmpty())
 					contentChanged = false;
 				
@@ -353,7 +351,7 @@ public class Editor  {
 	protected Matcher createMatcher(String regex, boolean matchCase, boolean wholeWord){
 		
 		
-		String newRegex = (wholeWord)?"\\b"+regex+"\\b" : regex;
+		String newRegex = (wholeWord)?"\\b"+Pattern.quote(regex)+"\\b" : Pattern.quote(regex);
 		Pattern pattern = (matchCase) ? Pattern.compile(newRegex) : Pattern.compile(newRegex, Pattern.CASE_INSENSITIVE);
 		Matcher matcher = pattern.matcher(getText());
 		return matcher;
